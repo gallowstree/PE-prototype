@@ -11,7 +11,7 @@ Player::Player():
         sprite()
 
 {
-    boundingBox = sf::FloatRect(sprite.getPosition().x, sprite.getPosition().y, 25, 25);
+    boundingBox = sf::FloatRect(sprite.getPosition().x, sprite.getPosition().y, 60, 60);
 }
 
 void Player::update(sf::Time elapsedTime)
@@ -59,6 +59,12 @@ void Player::setTexture(const sf::Texture &texture)
     sprite.setTexture(texture);
     //sprite.setColor(sf::Color::Green);
 }
+
+void Player::intersectedWith(Entity* other, sf::FloatRect intersection)
+{
+    Entity::intersectedWith(other, intersection);
+}
+
 
 
 

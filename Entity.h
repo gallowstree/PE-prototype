@@ -10,17 +10,23 @@
 #include <SFML/Graphics.hpp>
 #include <queue>
 
+
+
+
 class Entity
 {
+
 public:
-    std::queue<int16_t> area();
+    static int16_t lastId;
     sf::FloatRect boundingBox;
     sf::FloatRect movementBounds;
+    int16_t id;
+    bool isStatic;
 
-    void intersectedWith(Entity& other)
-    {
+    Entity();
 
-    }
+    void intersectedWith(Entity* other, sf::FloatRect intersection);
+
 
 };
 

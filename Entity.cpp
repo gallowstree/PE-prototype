@@ -4,7 +4,16 @@
 
 #include "Entity.h"
 
-std::queue<int16_t > Entity::area()
+int16_t Entity::lastId;
+
+Entity::Entity() :
+boundingBox(),
+id(-1)
+{
+    id = Entity::lastId++;
+}
+
+void Entity::intersectedWith(Entity *other, sf::FloatRect intersection)
 {
 
 }

@@ -28,12 +28,11 @@ public:
     void processEvents();
 
 
-    std::queue<int16_t> areasForEntity(const Entity &entity);
+    std::vector<int16_t> areasForEntity(const Entity &entity);
 
 private:
     void updateCrosshair();
     void loadTextures();
-    void drawAreas();
     ResourceHolder<sf::Texture, Textures> textureHolder;
     Player player;
     sf::RenderWindow& window;
@@ -42,11 +41,20 @@ private:
     sf::Vector2f camCenter;
     sf::FloatRect bounds;
     std::vector<Area*> areas;
-    std::vector<std::vector<std::vector<Entity>>> static_objects;
+
+    //Every position in the first vector represents an area (area 0, 1, ..., n)
+    //Every vector in each position has references to every object in the area
+    std::vector<std::vector<Entity*>> static_objects;
+
+    std::vector<Entity> world_entities;
 
     void calculateCamCenter();
 
     void init();
+
+    void createStaticObjects();
+
+    void debugEntitiesInArea();
 };
 
 

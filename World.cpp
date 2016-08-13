@@ -5,6 +5,7 @@
 #include <math.h>
 #include "World.h"
 #include "SFUtils.h"
+#include "Wall.h"
 
 World::World(sf::RenderWindow& window) :
 textureHolder(),
@@ -14,7 +15,8 @@ cursorSprite(),
 bounds(0,0,2400.0f, 2400.0f),
 camera(),
 camCenter(),
-areas()
+areas(),
+static_objects()
 {
     loadTextures();
     player.setTexture(textureHolder.get(Textures::PLAYER_RED_SG));
@@ -23,11 +25,27 @@ areas()
     camera.reset(sf::FloatRect(0,0, 600, 600));
     camera.setViewport(sf::FloatRect(0,0, 1.0f, 1.0f));
     init();
+
 }
 
 void World::update(sf::Time elapsedTime) {
+
+    for (auto& area: areasForEntity(player))
+    {
+        for (auto& other_entity : static_objects[area])
+        {
+            sf::FloatRect intersection;
+            if (other_entity->boundingBox.intersects(player.boundingBox, intersection))
+            {
+                player.intersectedWith(other_entity, intersection);
+            }
+        }
+    }
+
     player.update(elapsedTime);
-    areasForEntity(player);
+
+    //debugEntitiesInArea();
+
     updateCrosshair();
 }
 
@@ -35,10 +53,29 @@ void World::render()
 {
     calculateCamCenter();
 
+    sf::FloatRect visibleRect(camCenter.x - 300, camCenter.y - 300, 600, 600);
+
+    int areaId = 0;
     for (auto &area : areas)
     {
-        area->draw(window);
+        if (area->rect.intersects(visibleRect))
+        {
+            area->draw(window);
+            //printf("Drawing area: %d ", areaId);
+        }
+        areaId++;
     }
+    //printf("\n");
+
+    for (const auto &staticEntity : world_entities)
+    {
+        auto drawRect = sf::RectangleShape(sf::Vector2f(staticEntity.boundingBox.width, staticEntity.boundingBox.height));
+        drawRect.setPosition(staticEntity.boundingBox.left, staticEntity.boundingBox.top);
+        drawRect.setFillColor(sf::Color::Cyan);
+
+        window.draw(drawRect);
+    }
+
 
 
     window.setView(camera);
@@ -46,10 +83,28 @@ void World::render()
     auto rect = sf::RectangleShape(sf::Vector2f(player.boundingBox.width, player.boundingBox.height));
     rect.setFillColor(sf::Color::Green);
     rect.setPosition(player.sprite.getPosition());
-    rect.setRotation(player.sprite.getRotation());
+    //rect.setRotation(player.sprite.getRotation());
+    window.draw(rect);
+    for (auto& area: areasForEntity(player))
+    {
+        for (auto& other_entity : static_objects[area])
+        {
+            sf::FloatRect intersection;
+            if (other_entity->boundingBox.intersects(player.boundingBox, intersection))
+            {
+                printf("Player collision with entity id: %d at: x:%f, y:%f, w:%f, h:%f\n", other_entity->id,  intersection.left, intersection.top, intersection.width, intersection.height);
+                auto drawRect = sf::RectangleShape(sf::Vector2f(intersection.width, intersection.height ) );
+                drawRect.setPosition(intersection.left, intersection.top);
+                drawRect.setFillColor(sf::Color::Red);
+                window.draw(drawRect);
+            }
+        }
+    }
     window.draw(player.sprite);
 
-    window.draw(rect);
+
+
+
     window.draw(cursorSprite);
 
 }
@@ -94,9 +149,9 @@ void World::calculateCamCenter()
         camCenter.y = player.sprite.getPosition().y;//bounds.height - 300;
 }
 
-std::queue<int16_t> World::areasForEntity(const Entity &entity)
+std::vector<int16_t> World::areasForEntity(const Entity &entity)
 {
-    std::queue<int16_t> areas;
+    std::vector<int16_t> areas;
 
     int i = 0;
     for (auto &area : this->areas)
@@ -104,12 +159,13 @@ std::queue<int16_t> World::areasForEntity(const Entity &entity)
 
         if (area->rect.intersects(entity.boundingBox))
         {
-            printf("%d, ", i);
+            areas.push_back(i);
+            //printf("%i ",i);
         }
+
         i++;
     }
-    printf("\n");
-
+    //printf("\n");
     return areas;
 }
 
@@ -129,16 +185,55 @@ void World::init()
         {
             Area* newArea = new Area(x*area_size, y*area_size, area_size, area_size);
             areas.push_back(newArea);
+            static_objects.push_back(std::vector<Entity*>());
         }
+    }
 
+
+
+    createStaticObjects();
+}
+
+void World::createStaticObjects()
+{
+    Wall wall1(0, 0, 1000, 20);
+    Wall wall2(0, 500, 500, 20);
+    world_entities.push_back(wall1);
+    world_entities.push_back(wall2);
+
+    for (auto& entity : world_entities)
+    {
+        if (entity.isStatic)
+        {
+            for (auto& area : areasForEntity(entity))
+            {
+                static_objects[area].push_back(&entity);
+            }
+        }
     }
 
 }
 
-void World::drawAreas()
+void World::debugEntitiesInArea()
 {
-
+    int areaIndex = 0;
+    for (auto& area : static_objects)
+    {
+        if (area.size() > 0)
+            printf("area %d has entities ", areaIndex);
+        for (auto& entity : area)
+        {
+            printf("%d ", entity->id);
+        }
+        if (area.size() > 0)
+            printf("\n");
+        areaIndex++;
+    }
+    printf("\n");
 }
+
+
+
 
 
 
