@@ -6,11 +6,12 @@
 
 
 Player::Player():
-        speed(500),
+        speed(400),
         direction(),
         sprite()
-{
 
+{
+    boundingBox = sf::FloatRect(sprite.getPosition().x, sprite.getPosition().y, 25, 25);
 }
 
 void Player::update(sf::Time elapsedTime)
@@ -20,38 +21,43 @@ void Player::update(sf::Time elapsedTime)
 
 void Player::updateMovement(sf::Time elapsedTime)
 {
+
+    //Fix no areas when player is in the edge of the map
     sf::Vector2f movement (0,0);
-    if (direction[up])
+    if (direction[up_i] && sprite.getPosition().y - speed* elapsedTime.asSeconds() > movementBounds.top)
     {
         movement.y -= speed;
     }
-    if (direction[left])
+    if (direction[left_i] && sprite.getPosition().x - speed * elapsedTime.asSeconds() > 0)
     {
         movement.x -= speed;
     }
-    if (direction[down])
+    if (direction[down_i] && sprite.getPosition().y < movementBounds.top + movementBounds.height)
     {
         movement.y += speed;
     }
-    if (direction[right])
+    if (direction[right_i] && sprite.getPosition().x < movementBounds.top + movementBounds.width)
     {
         movement.x += speed;
     }
 
     sprite.move(movement * elapsedTime.asSeconds());
+    boundingBox.top = sprite.getPosition().y;
+    boundingBox.left = sprite.getPosition().x;
 }
 
 void Player::processEvents()
 {
-    direction[down] = sf::Keyboard::isKeyPressed(sf::Keyboard::S);
-    direction[up] = sf::Keyboard::isKeyPressed(sf::Keyboard::W);
-    direction[left] = sf::Keyboard::isKeyPressed(sf::Keyboard::A);
-    direction[right] = sf::Keyboard::isKeyPressed(sf::Keyboard::D);
+    direction[down_i] = sf::Keyboard::isKeyPressed(sf::Keyboard::S);
+    direction[up_i] = sf::Keyboard::isKeyPressed(sf::Keyboard::W);
+    direction[left_i] = sf::Keyboard::isKeyPressed(sf::Keyboard::A);
+    direction[right_i] = sf::Keyboard::isKeyPressed(sf::Keyboard::D);
 }
 
 void Player::setTexture(const sf::Texture &texture)
 {
     sprite.setTexture(texture);
+    //sprite.setColor(sf::Color::Green);
 }
 
 

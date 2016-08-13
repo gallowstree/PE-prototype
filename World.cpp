@@ -11,19 +11,23 @@ textureHolder(),
 player(),
 window(window),
 cursorSprite(),
-bounds(0,0,2000.0f, 2000.0f),
+bounds(0,0,2400.0f, 2400.0f),
 camera(),
-camCenter()
+camCenter(),
+areas()
 {
     loadTextures();
     player.setTexture(textureHolder.get(Textures::PLAYER_RED_SG));
+    player.movementBounds = sf::FloatRect(0,0, 2400.0f, 2400.0f);
     cursorSprite.setTexture(textureHolder.get(Textures::CROSSHAIR));
-    camera.reset(sf::FloatRect(0,0, 800, 700));
+    camera.reset(sf::FloatRect(0,0, 600, 600));
     camera.setViewport(sf::FloatRect(0,0, 1.0f, 1.0f));
+    init();
 }
 
 void World::update(sf::Time elapsedTime) {
     player.update(elapsedTime);
+    areasForEntity(player);
     updateCrosshair();
 }
 
@@ -31,10 +35,23 @@ void World::render()
 {
     calculateCamCenter();
 
+    for (auto &area : areas)
+    {
+        area->draw(window);
+    }
+
+
     window.setView(camera);
     camera.setCenter(camCenter);
+    auto rect = sf::RectangleShape(sf::Vector2f(player.boundingBox.width, player.boundingBox.height));
+    rect.setFillColor(sf::Color::Green);
+    rect.setPosition(player.sprite.getPosition());
+    rect.setRotation(player.sprite.getRotation());
     window.draw(player.sprite);
+
+    window.draw(rect);
     window.draw(cursorSprite);
+
 }
 
 void World::updateCrosshair()
@@ -66,16 +83,68 @@ void World::calculateCamCenter()
 {
     camCenter = player.sprite.getPosition();
 
-    if (player.sprite.getPosition().x < 400)
-        camCenter.x = 400;
-    else if (player.sprite.getPosition().x > bounds.width - 400)
-        camCenter.x = bounds.width - 400;
+    if (player.sprite.getPosition().x < 300)
+        camCenter.x = 300;
+    else if (player.sprite.getPosition().x > bounds.width - 300)
+        camCenter.x = player.sprite.getPosition().x;//bounds.width - 300;
 
-    if (player.sprite.getPosition().y < 400)
-        camCenter.y = 400;
+    if (player.sprite.getPosition().y < 300)
+        camCenter.y = 300;
     else if (player.sprite.getPosition().y > bounds.height - 400)
-        camCenter.y = bounds.height - 400;
+        camCenter.y = player.sprite.getPosition().y;//bounds.height - 300;
 }
+
+std::queue<int16_t> World::areasForEntity(const Entity &entity)
+{
+    std::queue<int16_t> areas;
+
+    int i = 0;
+    for (auto &area : this->areas)
+    {
+
+        if (area->rect.intersects(entity.boundingBox))
+        {
+            printf("%d, ", i);
+        }
+        i++;
+    }
+    printf("\n");
+
+    return areas;
+}
+
+void World::init()
+{
+    int noAreasX = 0;
+    int noAreasY = 0;
+
+    float area_size = 400;
+
+    noAreasX = bounds.width / area_size;
+    noAreasY = bounds.height / area_size;
+
+    for (int x = 0; x < noAreasX; x++)
+    {
+        for (int y = 0; y < noAreasY; y++)
+        {
+            Area* newArea = new Area(x*area_size, y*area_size, area_size, area_size);
+            areas.push_back(newArea);
+        }
+
+    }
+
+}
+
+void World::drawAreas()
+{
+
+}
+
+
+
+
+
+
 
 
 

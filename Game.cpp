@@ -7,7 +7,7 @@
 
 Game::Game(sf::RenderWindow& window)
 : window(window),
-  TimePerFrame(sf::seconds(1.f/60.f)),
+  TimePerFrame(sf::seconds(1.f/50.f)),
   world(window)
 {
     window.setVerticalSyncEnabled(true);
@@ -17,6 +17,7 @@ void Game::run()
 {
     sf::Clock clock;
     sf::Time timeSinceLastUpdate = sf::Time::Zero;
+    bool shouldRender = true;
     while (window.isOpen())
     {
         sf::Time elapsedTime = clock.restart();
@@ -26,10 +27,15 @@ void Game::run()
             timeSinceLastUpdate -= TimePerFrame;
             processEvents();
             update(TimePerFrame);
-
+            shouldRender = true;
         }
 
-        render();
+        if (shouldRender)
+        {
+            render();
+            shouldRender = false;
+        }
+
     }
 }
 

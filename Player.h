@@ -6,14 +6,15 @@
 #define GAMEPLAY_PROTOTYPE_PLAYER_H
 
 #include <SFML/Graphics.hpp>
+#include "Entity.h"
 
-#define up 0
-#define down 1
-#define right 2
-#define left 3
+#define up_i 0
+#define down_i 1
+#define right_i 2
+#define left_i 3
 
 
-class Player
+class Player : public Entity
 {
 public:
     Player();

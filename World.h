@@ -8,7 +8,9 @@
 #include <SFML/Graphics.hpp>
 #include "ResourceHolder.h"
 #include "Player.h"
-
+#include "Entity.h"
+#include "Area.h"
+#include <queue>
 
 enum Textures
 {
@@ -24,9 +26,14 @@ public:
     void update(sf::Time elapsedTime);
     void render();
     void processEvents();
+
+
+    std::queue<int16_t> areasForEntity(const Entity &entity);
+
 private:
     void updateCrosshair();
     void loadTextures();
+    void drawAreas();
     ResourceHolder<sf::Texture, Textures> textureHolder;
     Player player;
     sf::RenderWindow& window;
@@ -34,8 +41,12 @@ private:
     sf::View camera;
     sf::Vector2f camCenter;
     sf::FloatRect bounds;
+    std::vector<Area*> areas;
+    std::vector<std::vector<std::vector<Entity>>> static_objects;
 
     void calculateCamCenter();
+
+    void init();
 };
 
 
