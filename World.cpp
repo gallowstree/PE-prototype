@@ -22,7 +22,7 @@ static_objects()
     player.setTexture(textureHolder.get(Textures::PLAYER_RED_SG));
     player.movementBounds = sf::FloatRect(0,0, 2400.0f, 2400.0f);
     cursorSprite.setTexture(textureHolder.get(Textures::CROSSHAIR));
-    camera.reset(sf::FloatRect(0,0, 600, 600));
+    camera.reset(sf::FloatRect(0,0, window.getSize().x, window.getSize().y));
     camera.setViewport(sf::FloatRect(0,0, 1.0f, 1.0f));
     init();
 
@@ -44,6 +44,8 @@ void World::update(sf::Time elapsedTime) {
 
     player.update(elapsedTime);
 
+    player.intersectedWith(&player, sf::FloatRect());
+
     //debugEntitiesInArea();
 
     updateCrosshair();
@@ -53,7 +55,7 @@ void World::render()
 {
     calculateCamCenter();
 
-    sf::FloatRect visibleRect(camCenter.x - 300, camCenter.y - 300, 600, 600);
+    sf::FloatRect visibleRect(camCenter.x - window.getSize().x /3, camCenter.y - window.getSize().y /3, window.getSize().x, window.getSize().y);
 
     int areaId = 0;
     for (auto &area : areas)
@@ -138,14 +140,14 @@ void World::calculateCamCenter()
 {
     camCenter = player.sprite.getPosition();
 
-    if (player.sprite.getPosition().x < 300)
-        camCenter.x = 300;
-    else if (player.sprite.getPosition().x > bounds.width - 300)
+    if (player.sprite.getPosition().x < window.getSize().x / 2)
+        camCenter.x =  window.getSize().x / 2;
+    else if (player.sprite.getPosition().x > bounds.width - window.getSize().x / 2)
         camCenter.x = player.sprite.getPosition().x;//bounds.width - 300;
 
-    if (player.sprite.getPosition().y < 300)
-        camCenter.y = 300;
-    else if (player.sprite.getPosition().y > bounds.height - 400)
+    if (player.sprite.getPosition().y < window.getSize().y / 2)
+        camCenter.y =  window.getSize().y / 2;
+    else if (player.sprite.getPosition().y > bounds.height - window.getSize().y / 2)
         camCenter.y = player.sprite.getPosition().y;//bounds.height - 300;
 }
 
@@ -197,7 +199,7 @@ void World::init()
 void World::createStaticObjects()
 {
     Wall wall1(0, 0, 1000, 20);
-    Wall wall2(0, 500, 500, 20);
+    Wall wall2(100, 500, 500, 20);
     world_entities.push_back(wall1);
     world_entities.push_back(wall2);
 

@@ -10,7 +10,11 @@
 #include <SFML/Graphics.hpp>
 #include <queue>
 
-
+enum EntityType
+{
+    Wall_T,
+    Player_T
+};
 
 
 class Entity
@@ -22,6 +26,7 @@ public:
     sf::FloatRect movementBounds;
     int16_t id;
     bool isStatic;
+    EntityType type;
 
     Entity();
 
@@ -29,6 +34,7 @@ public:
 
 
 };
+
 
 
 #endif //GAMEPLAY_PROTOTYPE_ENTITY_H

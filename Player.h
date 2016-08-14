@@ -26,9 +26,11 @@ public:
     float speed;
     sf::Sprite sprite;
     bool direction[4];
-
+    bool canMove[4];
 
     void intersectedWith(Entity *other, sf::FloatRect intersection);
+
+    void resetMovementFlag();
 };
 
 

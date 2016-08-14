@@ -12,5 +12,7 @@ Wall::Wall(float x, float y, float width, float height)
     boundingBox.width = width;
 
     isStatic = true;
+
+    type = EntityType::Wall_T;
 }
 
