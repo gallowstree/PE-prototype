@@ -30,11 +30,14 @@ static_objects()
 
 void World::update(sf::Time elapsedTime) {
 
+    player.update(elapsedTime);
+
     for (auto& area: areasForEntity(player))
     {
         for (auto& other_entity : static_objects[area])
         {
             sf::FloatRect intersection;
+
             if (other_entity->boundingBox.intersects(player.boundingBox, intersection))
             {
                 player.intersectedWith(other_entity, intersection);
@@ -42,32 +45,22 @@ void World::update(sf::Time elapsedTime) {
         }
     }
 
-    player.update(elapsedTime);
-
-    player.intersectedWith(&player, sf::FloatRect());
-
-    //debugEntitiesInArea();
-
     updateCrosshair();
 }
 
 void World::render()
 {
     calculateCamCenter();
-
-    sf::FloatRect visibleRect(camCenter.x - window.getSize().x /3, camCenter.y - window.getSize().y /3, window.getSize().x, window.getSize().y);
-
-    int areaId = 0;
+    sf::FloatRect visibleRect(camCenter.x - window.getSize().x/2, camCenter.y - window.getSize().y/2, window.getSize().x, window.getSize().y);
     for (auto &area : areas)
     {
         if (area->rect.intersects(visibleRect))
         {
-            area->draw(window);
-            //printf("Drawing area: %d ", areaId);
+            area->draw(window, debugAreaGrid);
         }
-        areaId++;
     }
-    //printf("\n");
+
+    debug_drawVisibleRect(visibleRect);
 
     for (const auto &staticEntity : world_entities)
     {
@@ -78,48 +71,25 @@ void World::render()
         window.draw(drawRect);
     }
 
-
-
     window.setView(camera);
     camera.setCenter(camCenter);
-    auto rect = sf::RectangleShape(sf::Vector2f(player.boundingBox.width, player.boundingBox.height));
-    rect.setFillColor(sf::Color::Green);
-    rect.setPosition(player.sprite.getPosition());
-    //rect.setRotation(player.sprite.getRotation());
-    window.draw(rect);
-    for (auto& area: areasForEntity(player))
-    {
-        for (auto& other_entity : static_objects[area])
-        {
-            sf::FloatRect intersection;
-            if (other_entity->boundingBox.intersects(player.boundingBox, intersection))
-            {
-                printf("Player collision with entity id: %d at: x:%f, y:%f, w:%f, h:%f\n", other_entity->id,  intersection.left, intersection.top, intersection.width, intersection.height);
-                auto drawRect = sf::RectangleShape(sf::Vector2f(intersection.width, intersection.height ) );
-                drawRect.setPosition(intersection.left, intersection.top);
-                drawRect.setFillColor(sf::Color::Red);
-                window.draw(drawRect);
-            }
-        }
-    }
+
+    debug_drawPlayerBox();
+    debug_drawPlayerCollisionRects();
     window.draw(player.sprite);
 
-
-
-
     window.draw(cursorSprite);
-
 }
 
 void World::updateCrosshair()
 {
     sf::Vector2f mousePositionFloat = window.mapPixelToCoords((sf::Mouse::getPosition(window)));
-    sf::Vector2f spriteCenter = getSpriteCenter(player.sprite);
+    sf::Vector2f spriteCenter = player.boundingBox.getPosition() + player.boundingBox.getSize() / 2.0f;//getSpriteCenter(player.sprite);
     sf::Vector2f facing = mousePositionFloat - spriteCenter;
     float rads = atan2f(facing.y, facing.x);
     float degs = rads * 180/M_PI;
     sf::IntRect spriteRect = player.sprite.getTextureRect();
-    player.sprite.setOrigin(sf::Vector2f(spriteRect.width/ 2, spriteRect.height / 2));
+    player.sprite.setOrigin(player.boundingBox.getSize() / 2.0f);
     player.sprite.setRotation(degs);
 
     sf::IntRect cursorSpriteRect = cursorSprite.getTextureRect();
@@ -138,17 +108,17 @@ void World::processEvents() {
 
 void World::calculateCamCenter()
 {
-    camCenter = player.sprite.getPosition();
+    camCenter = player.boundingBox.getPosition();
 
-    if (player.sprite.getPosition().x < window.getSize().x / 2)
+    if (player.boundingBox.getPosition().x < window.getSize().x / 2)
         camCenter.x =  window.getSize().x / 2;
-    else if (player.sprite.getPosition().x > bounds.width - window.getSize().x / 2)
-        camCenter.x = player.sprite.getPosition().x;//bounds.width - 300;
+    else if (player.boundingBox.getPosition().x > bounds.width - window.getSize().x / 2)
+        camCenter.x = player.boundingBox.getPosition().x;//bounds.width - 300;
 
-    if (player.sprite.getPosition().y < window.getSize().y / 2)
+    if (player.boundingBox.getPosition().y < window.getSize().y / 2)
         camCenter.y =  window.getSize().y / 2;
-    else if (player.sprite.getPosition().y > bounds.height - window.getSize().y / 2)
-        camCenter.y = player.sprite.getPosition().y;//bounds.height - 300;
+    else if (player.boundingBox.getPosition().y > bounds.height - window.getSize().y / 2)
+        camCenter.y = player.boundingBox.getPosition().y;//bounds.height - 300;
 }
 
 std::vector<int16_t> World::areasForEntity(const Entity &entity)
@@ -198,7 +168,7 @@ void World::init()
 
 void World::createStaticObjects()
 {
-    Wall wall1(0, 0, 1000, 20);
+    Wall wall1(500, 500, 20, 1000);
     Wall wall2(100, 500, 500, 20);
     world_entities.push_back(wall1);
     world_entities.push_back(wall2);
@@ -232,6 +202,55 @@ void World::debugEntitiesInArea()
         areaIndex++;
     }
     printf("\n");
+}
+
+void World::debug_drawVisibleRect(sf::FloatRect visibleRect)
+{
+    if (debugVisibleRect)
+    {
+        sf::RectangleShape visible = sf::RectangleShape();
+        shapeFromFloatRect(visibleRect, visible);
+        visible.setFillColor(sf::Color::Transparent);
+        visible.setOutlineColor(sf::Color::Green);
+        visible.setOutlineThickness(10);
+        window.draw(visible);
+    }
+}
+
+void World::debug_drawPlayerCollisionRects()
+{
+    for (auto& area: areasForEntity(player))
+    {
+        for (auto& other_entity : static_objects[area])
+        {
+            sf::FloatRect intersection;
+            if (other_entity->boundingBox.intersects(player.boundingBox, intersection))
+            {
+                auto drawRect = sf::RectangleShape(sf::Vector2f(intersection.width, intersection.height ) );
+                drawRect.setPosition(intersection.left, intersection.top);
+                drawRect.setFillColor(sf::Color::Red);
+                window.draw(drawRect);
+            }
+        }
+    }
+}
+
+void World::debug_drawPlayerBox() const
+{
+    if (debugPlayerBox)
+    {
+        auto rect = sf::RectangleShape(sf::Vector2f(player.boundingBox.width, player.boundingBox.height));
+        rect.setFillColor(sf::Color::Green);
+        rect.setPosition(player.boundingBox.left, player.boundingBox.top);
+        window.draw(rect);
+
+        sf::RectangleShape cross  = sf::RectangleShape();
+        cross.setFillColor(sf::Color::Magenta);
+        shapeFromFloatRect(player.horz_rect, cross);
+        window.draw(cross);
+        shapeFromFloatRect(player.vert_rect, cross);
+        window.draw(cross);
+    }
 }
 
 

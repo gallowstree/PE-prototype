@@ -55,6 +55,17 @@ private:
     void createStaticObjects();
 
     void debugEntitiesInArea();
+
+    void debug_drawVisibleRect(sf::FloatRect rect);
+
+    bool debugVisibleRect = true;
+    bool debugPlayerBox = true;
+    bool debugAreaGrid = true;
+
+    void debug_drawPlayerBox() const;
+
+
+    void debug_drawPlayerCollisionRects();
 };
 
 

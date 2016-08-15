@@ -7,14 +7,17 @@
 
 
 Player::Player():
-        speed(400),
+        speed(1000),
         direction(),
-        sprite()
+        sprite(),
+        cross_thickness(5)
 
 {
-    boundingBox = sf::FloatRect(sprite.getPosition().x, sprite.getPosition().y, 60, 60);
+    boundingBox = BoundingBox(sprite.getPosition().x, sprite.getPosition().y, 50, 50);
+    updateCross();
     type = EntityType::Player_T;
-    resetMovementFlag();
+    horz_rect.width = boundingBox.width;
+    vert_rect.height = boundingBox.height;
 }
 
 void Player::update(sf::Time elapsedTime)
@@ -27,28 +30,28 @@ void Player::updateMovement(sf::Time elapsedTime)
 
     //Fix no areas when player is in the edge of the map
     sf::Vector2f movement (0,0);
-    if (direction[up_i] && sprite.getPosition().y - speed* elapsedTime.asSeconds() > movementBounds.top && canMove[up_i])
+    if (direction[up_i] && boundingBox.getPosition().y - speed* elapsedTime.asSeconds() > movementBounds.top)
     {
         movement.y -= speed;
     }
-    if (direction[left_i] && sprite.getPosition().x - speed * elapsedTime.asSeconds() > 0 && canMove[left_i])
+    if (direction[left_i] && boundingBox.getPosition().x - speed * elapsedTime.asSeconds() > 0)
     {
         movement.x -= speed;
     }
-    if (direction[down_i] && sprite.getPosition().y < movementBounds.top + movementBounds.height && canMove[down_i])
+    if (direction[down_i] && boundingBox.getPosition().y < movementBounds.top + movementBounds.height)
     {
         movement.y += speed;
     }
-    if (direction[right_i] && sprite.getPosition().x < movementBounds.top + movementBounds.width && canMove[right_i])
+    if (direction[right_i] && boundingBox.getPosition().x < movementBounds.top + movementBounds.width)
     {
         movement.x += speed;
     }
 
-    sprite.move(movement * elapsedTime.asSeconds());
-    boundingBox.top = sprite.getPosition().y;
-    boundingBox.left = sprite.getPosition().x;
+    movement *= elapsedTime.asSeconds();
+    boundingBox.top += movement.y;
+    boundingBox.left += movement.x;
+    updateCross();
 
-    resetMovementFlag();
 }
 
 void Player::processEvents()
@@ -69,30 +72,40 @@ void Player::intersectedWith(Entity* other, sf::FloatRect intersection)
 {
     Entity::intersectedWith(other, intersection);
 
+
+
     if (other->type == EntityType::Wall_T)
     {
-        if (intersection.top > boundingBox.top + boundingBox.height / 2)
+        if (intersection.intersects(vert_rect))
         {
-            canMove[down_i] = false;
+            if (intersection.top > boundingBox.top + boundingBox.height / 2)
+            {
+                boundingBox.top -= intersection.height;
+                //sprite.move(0, -intersection.height);
+            }
+
+            if (intersection.top < boundingBox.top + boundingBox.height / 2)
+            {
+                boundingBox.top += intersection.height;
+                //sprite.move(0, intersection.height);
+            }
         }
 
-        if (intersection.top < boundingBox.top + boundingBox.height / 2)
+        if (intersection.intersects(horz_rect))
         {
-            canMove[up_i] = false;
+            if (intersection.left < boundingBox.left + boundingBox.width / 2)
+            {
+                boundingBox.left += intersection.width;
+                //sprite.move(intersection.width, 0);
+            }
+
+            if (intersection.left > boundingBox.left + boundingBox.width / 2)
+            {
+                boundingBox.left -= intersection.width;
+                //sprite.move(-intersection.width, 0);
+            }
         }
-
-        if (intersection.left < boundingBox.left + boundingBox.width / 2)
-        {
-            canMove[left_i] = false;
-            printf("gato\n");
-        }
-
-        if (intersection.left > boundingBox.left + boundingBox.width / 2)
-        {
-            canMove[right_i] = false;
-        }
-
-
+        updateCross();
     }
     else
     {
@@ -100,13 +113,18 @@ void Player::intersectedWith(Entity* other, sf::FloatRect intersection)
     }
 }
 
-void Player::resetMovementFlag()
+void Player::updateCross()
 {
-    for (int i = 0; i < 4; i++)
-    {
-        canMove[i] = true;
-    }
+    vert_rect.left = boundingBox.left + boundingBox.width / 2 - cross_thickness/2;
+    vert_rect.top = boundingBox.top;
+    vert_rect.width = cross_thickness;
+    horz_rect.left = boundingBox.left;
+    horz_rect.top = boundingBox.top  + boundingBox.height / 2 - cross_thickness/2;
+    horz_rect.height = cross_thickness;
+    sprite.setPosition(boundingBox.left + boundingBox.width/2, boundingBox.top + boundingBox.height/2);
 }
+
+
 
 
 

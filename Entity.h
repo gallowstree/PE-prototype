@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include <SFML/Graphics.hpp>
 #include <queue>
+#include "BoundingBox.h"
 
 enum EntityType
 {
@@ -22,7 +23,7 @@ class Entity
 
 public:
     static int16_t lastId;
-    sf::FloatRect boundingBox;
+    BoundingBox boundingBox;
     sf::FloatRect movementBounds;
     int16_t id;
     bool isStatic;
@@ -30,7 +31,7 @@ public:
 
     Entity();
 
-    void intersectedWith(Entity* other, sf::FloatRect intersection);
+    virtual void intersectedWith(Entity* other, sf::FloatRect intersection);
 
 
 };

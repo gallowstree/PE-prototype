@@ -12,7 +12,7 @@ class Area
 {
 public:
     Area(float x, float y, float width, float height);
-    void draw(sf::RenderTarget &window);
+    void draw(sf::RenderTarget &window, bool debugGrid);
     sf::FloatRect rect;
 };
 

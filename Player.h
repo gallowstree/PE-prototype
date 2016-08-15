@@ -25,12 +25,14 @@ public:
 
     float speed;
     sf::Sprite sprite;
+    sf::FloatRect vert_rect;
+    sf::FloatRect horz_rect;
     bool direction[4];
-    bool canMove[4];
+    float cross_thickness;
 
     void intersectedWith(Entity *other, sf::FloatRect intersection);
 
-    void resetMovementFlag();
+    void updateCross();
 };
 
 

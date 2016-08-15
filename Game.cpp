@@ -7,7 +7,7 @@
 
 Game::Game(sf::RenderWindow& window)
 : window(window),
-  TimePerFrame(sf::seconds(1.f/50.f)),
+  TimePerFrame(sf::seconds(1.f/60.f)),
   world(window)
 {
     window.setVerticalSyncEnabled(true);
@@ -41,14 +41,9 @@ void Game::run()
 
 void Game::render()
 {
-    auto circle = sf::CircleShape(100);
-    circle.setPosition(1000, 1000);
-    circle.setFillColor(sf::Color::Red);
     window.clear();
-    window.draw(circle);
     world.render();
     window.display();
-
 }
 
 void Game::update(sf::Time elapsedTime)

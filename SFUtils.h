@@ -14,4 +14,10 @@ sf::Vector2f getSpriteCenter(const sf::Sprite& sprite)
     return spriteCenter;
 }
 
+
+void shapeFromFloatRect(const sf::FloatRect& rect, sf::RectangleShape& shape)
+{
+    shape.setSize(sf::Vector2f(rect.width, rect.height));
+    shape.setPosition(rect.left, rect.top);
+}
 #endif //GAMEPLAY_PROTOTYPE_SFUTILS_H
